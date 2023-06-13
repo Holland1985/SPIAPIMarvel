@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Personagens Marvel</title>
+</head>
+<body>
+    <header>
+      <img src="logo.png" alt="Marvel Logo" style="width: 10%;">
+      <div>
+        <label for="search">Pesquisar Personagens:</label>
+        <input type="text" id="search" name="search">
+        <button onclick="listCharacters(document.getElementById('search').value)">Buscar</button>
+      </div>
+    </header>
+    <main id="main">
+      <section id="destaques">
+        <h2>Destaques</h2>
+        <div id="heroContainer" class="grid">
+          <p>Carregando dados...</p>
+        </div>
+      </section>
+      <section id="hero" style="display: none;">
+        <p>hero</p>
+      </section>
+      <section id="about" style="display: none;">
+        <p>about</p>
+      </section>
+    </main>
+  </body>
+  <script>
+      const timestamp = '1686519539'
+      const apikey = '76621c22bcc64555398e0bed539f70d9'
+      const blz = 'e49687c1fd6d798b02bcf188f4707e3f'
+      const limit = 100
+      const offset = Math.floor((Math.random() * 1000) + 1);
+      const quantidadeDeDestaques = 6;
+
+      function showHistorys(codigo) {
+        console.log(codigo);
+        const timeStamp = '1686519539'
+        const apikey = '76621c22bcc64555398e0bed539f70d9'
+        const blz = 'e49687c1fd6d798b02bcf188f4707e3f'
+
+        let url = new URL(`https://gateway.marvel.com/v1/public/characters/${codigo}`);
+        url.searchParams.set("ts", timestamp);
+        url.searchParams.set("apikey", apikey);
+        url.searchParams.set("hash", blz);
+
+        console.log(url.toString());
+
+        fetch(url)
+          .then(resultado => resultado.json())
+          .then(heroInfo => console.log(heroInfo));
+
+      }
+
+      function mudarPagina(idDaPagina) {
+        let main = document.getElementById("main");
+        Array.from(main.children).forEach(page => {
+          page.style.display = idDaPagina === page.id ? 'block' : 'none';
+        });
+      }
+
+      function processarResultado(resultadoJson) {
+        console.log(resultadoJson);
+        let heroes = resultadoJson.data.results;
+        let heroContainer = document.getElementById("heroContainer");
+        
+        if (heroes.length == 0) {
+          heroContainer.innerHTML = "Nenhum heroi encontrado."
+          return;
+        }
+
+        heroContainer.innerHTML = "";
+        let quantidade = Math.min(quantidadeDeDestaques, heroes.length);
+        
+        for (let i = 0; i < quantidade; i++) {
+          let randomHero = getRandomHero(heroes);
+          console.log(randomHero);
+
+          // Cria todos os elementos
+          let heroArticle = document.createElement("article");
+          let heroImage = document.createElement("img");
+          let heroNome = document.createElement("h3");
+          let heroDescricao = document.createElement("p");
+          let heroLink = document.createElement("a");
+
+          // Image
+          heroImage.src = randomHero.thumbnail.path + "." + randomHero.thumbnail.extension;
+          heroImage.alt = "Imagem do heroi nao disponivel";
+          
+          // Nome
+          heroNome.innerText = randomHero.name;
+
+          // Descricao
+          heroDescricao.innerText = randomHero.description ? randomHero.description : "Descricao nao disponivel";
+
+          // Link
+          heroLink.innerText = "Ver mais";
+          heroLink.href ="#";
+          heroLink.setAttribute("data-codigo", randomHero.id);
+          heroLink.addEventListener("click", function() {
+            showHistorys(randomHero.id);
+          });
+
+          // Monta o quadro do destaque
+          heroArticle.appendChild(heroImage);
+          heroArticle.appendChild(heroNome);
+          heroArticle.appendChild(heroDescricao);
+          heroArticle.appendChild(heroLink);
+
+          // Mostra o quadro na tela
+          heroContainer.appendChild(heroArticle);
+        }
+      }
+
+      function getRandomHero(heroes) {
+        let randomIndex = Math.floor(Math.random() * (heroes.length - 1));
+        return heroes[randomIndex];
+      }
+
+      function listCharacters(name) {
+        let heroContainer = document.getElementById("heroContainer");
+        heroContainer.innerHTML = "<p>Carregando dados...</p>";
+
+        let url = new URL("https://gateway.marvel.com/v1/public/characters");
+        url.searchParams.set("ts", timestamp);
+        url.searchParams.set("apikey", apikey);
+        url.searchParams.set("hash", blz);
+        url.searchParams.set("limit", limit);
+
+        if (name) {
+          url.searchParams.set("nameStartsWith", name);
+        } else {
+          url.searchParams.set("offset", offset);
+        }
+
+        console.log(url.toString());
+
+        fetch(url)
+          .then(resultado => resultado.json())
+          .then(processarResultado);
+      }
+
+      listCharacters();
+  </script>
+</html>
